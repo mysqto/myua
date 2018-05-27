@@ -1,0 +1,9 @@
+title : What's my User-Agent?
+description : Do you want to know what is your User-Agent? Yes, here it is.
+author: mysqto
+keywords: [User-Agent, UA, UserAgent, MyUserAgent, My, UA]
+domain: myua.is
+cert: cert
+templates: templates
+geoip: templates/GeoLite2-City.mmdb
+qr: templates/qr.svg

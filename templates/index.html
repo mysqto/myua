@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="description" content="{{.Description}}"/>
+        <meta name="author" content="{{.Author}}"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <meta name="keywords" content="{{range .Keywords}}{{.}} {{end}}">
+        <title>{{.Title}}</title>
+        <!--[if lt IE 9]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        <style>
+            body
+            {
+                font-weight: 400;
+                margin-top: 6px;
+                background-color: #FFF;
+            }
+    
+            div.main-view {
+                margin: auto;
+                max-width: 656px;
+                width: auto;
+                display: block;
+                position:relative;
+            }
+    
+            div.container, div.copyleft{
+                margin: 0px 8px;
+                display: block;
+                position:relative;
+            }
+    
+            footer#foot {
+                margin-top: 2.2em;
+                position: relative;
+                height: 2.5em;
+            }
+    
+            #foot .copyleft img {
+                position: absolute;
+                right: 0;
+                top: 50%;
+                margin-top: -1.2em;
+                width: 2.5em;
+                height: 2.5em;
+            }
+    
+            #foot .copyleft p {
+                margin-left: auto;
+                margin-right: auto;
+                word-wrap: break-word;
+                font-size: 0.8em;
+            }
+    
+            h1 {
+                color: #3873B3;
+                font-size: 1.5em;
+                margin: 1em auto;
+                border-bottom: 1px solid #C3D9FF
+            }
+    
+            p, figure {
+                margin-left: auto;
+                margin-right: auto;
+                word-wrap: break-word;
+                max-width: 100%;
+                width: 100%;
+            }
+    
+            div.text-box {
+                margin: 10px auto;
+                padding: 0.5em;
+                border: 1px solid #ccc;
+                border-radius: 6px;
+            }
+    
+            p.info {
+                text-align: center;
+                font-size: 1.75rem;
+            }
+    
+            code.cli {
+                display: block;
+                padding-left: 1em;
+            }
+
+            img {
+                height: 1.25rem;
+                max-height: 1.25rem;
+                width: auto;
+            }
+            
+            span.copyleft {
+                display:inline-block;
+                transform: rotate(180deg);                
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="main-view">
+            <div class="container">
+                <h1>Your User-Agent is:</h1>
+                <div class="text-box">
+                    <p class="info">{{ .UserAgent }}</p>
+                </div>
+                <h1>Your IP Address is:</h1>
+                <div class="text-box">
+                    <p class="info">{{ if .Country }}<img src="data:image/svg+xml;base64,{{ .Country }}" alt="">{{ end }}  {{ .IPAddr }}</p>
+                </div>
+                <h1>CLI examples</h1>
+                <div class="text-box">
+                    <code class="cli">$ curl -L {{ .Domain }}</code>
+                    <code class="cli">{{ .IPAddr }}</code><br/>
+                    <code class="cli">$ http -b {{ .Domain }}</code>
+                    <code class="cli">{{ .IPAddr }}</code><br/>
+                    <code class="cli">$ wget -qO- {{ .Domain }}</code>
+                    <code class="cli">{{ .IPAddr }}</code><br/>
+                    <code class="cli">$ fetch -qo- https://{{ .Domain }}</code>
+                    <code class="cli">{{ .IPAddr }}</code><br/>
+                    <code class="cli">$ bat -print=b {{ .Domain }}</code>
+                    <code class="cli">{{ .IPAddr }}</code>
+                </div>
+            </div>
+        </div>
+        <footer id="foot">
+            <div class="main-view">
+                <div class="copyleft">
+                    <p>Copyleft <span class="copyleft">©</span> <script> document.write(new Date().getFullYear())</script>
+                        <a href="https://twitter.com/mysqto">Mysqto</a>. Hosted on <a href="https://bandwagonhost.com/aff.php?aff=23777">BandwagonHost</a>.<br>
+                        Contact me at my&#65131;mysq.to.
+                        <img src="data:image/svg+xml;base64,{{ .QR }}" alt=""/>
+                    </p>
+                </div>
+            </div>
+        </footer>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-119735834-1"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'UA-119735834-1');
+        </script>
+    </body>
+</html>
