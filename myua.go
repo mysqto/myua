@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -11,11 +10,13 @@ import (
 	"os"
 	"strings"
 
+	"encoding/base64"
 	"log/syslog"
 	"path"
 
 	"github.com/mysqto/letshttps"
 	"github.com/mysqto/myua/geoip"
+	"github.com/mysqto/onsale/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -96,12 +97,12 @@ func getUserAgent(w http.ResponseWriter, r *http.Request) {
 		strings.HasPrefix(ua, "Wget") ||
 		strings.HasPrefix(ua, "HTTPie") ||
 		strings.HasPrefix(ua, "fetch") {
-		letshttps.SendHTTPResponse(w, []byte(ipAddr), http.StatusOK)
+		utils.SendHTTPResponse(w, ipAddr, http.StatusOK)
 		return
 	}
 
 	if uri != "/" {
-		path := yamlConfig.Templates + uri
+		path := yamlConfig.Site.Base + uri
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		}
@@ -116,14 +117,16 @@ func getUserAgent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	country, err = geoip.LookUp(ipAddr, yamlConfig.Templates+string(os.PathSeparator)+"flags")
+	htmlTpl := makeTemplate()
+	country, err = geoip.LookUp(ipAddr, yamlConfig.Site.Base+string(os.PathSeparator)+"flags")
 
 	if err == nil {
-		yamlConfig.Country = country
+		htmlTpl.Country = country
 	}
 
-	yamlConfig.IPAddr = ipAddr
-	yamlConfig.UserAgent = ua
+	htmlTpl.IPAddr = ipAddr
+	htmlTpl.UserAgent = ua
+	htmlTpl.Host = letshttps.StripHost(r.Host)
 
 	data, err = ioutil.ReadFile("templates/index.html")
 
@@ -133,35 +136,51 @@ func getUserAgent(w http.ResponseWriter, r *http.Request) {
 
 	tpl, err = template.New("index").Parse(string(data))
 
-	tpl.Execute(w, yamlConfig)
+	tpl.Execute(w, htmlTpl)
 }
 
-func httpServer(addr string) {
-	handlers := make(letshttps.HandleMap)
-	handlers["/"] = getUserAgent
-	log.Fatal(letshttps.NewHTTPServer(addr, handlers).ListenAndServe())
+func serve(https bool, serverConfig *letshttps.ServerConfig) {
+	if https {
+		log.Fatal(letshttps.NewHTTPSServer(serverConfig).ListenAndServeTLS("", ""))
+	} else {
+		log.Fatal(letshttps.NewHTTPServer(serverConfig).ListenAndServe())
+	}
 }
 
-func httpsServer(certDir, domain, addr string) {
-	handlers := make(letshttps.HandleMap)
-	handlers["/"] = getUserAgent
-	log.Fatal(letshttps.NewHTTPSServer(certDir, domain, addr, handlers).ListenAndServeTLS("", ""))
+func makeTemplate() *htmlTemplate {
+	tpl := htmlTemplate(yamlConfig.Site.Config)
+	return &tpl
 }
 
-type config struct {
+type htmlTemplate struct {
 	Title       string   `yaml: "title"`
 	Description string   `yaml: "description"`
 	Author      string   `yaml: "author"`
 	Keywords    []string `yaml: "keywords"`
-	HTTPS       bool     `yaml: "https"`
-	Domain      string   `yaml: "domain"`
-	Cert        string   `yaml: "cert"`
-	Templates   string   `yaml: "templates"`
+	Domain      []string `yaml: "domain"`
 	GeoIP       string   `yaml: "geoip"`
+	GAid        string   `yaml: "gaid"`
 	QR          string   `yaml: "qr"`
+	Host        string
 	IPAddr      string
-	Country     string
 	UserAgent   string
+	Country     string
+}
+
+type config struct {
+	Site struct {
+		Base    string `yaml: "base"`
+		Config htmlTemplate
+		HTTPS struct {
+			Enabled bool   `yaml: "enabled"`
+			Only    bool   `yaml: "only"`
+			Port    string `yaml: "port"`
+			Cert    string `yaml: "cert"`
+		} `yaml: "https"`
+		HTTP struct {
+			Port string `yaml: "port"`
+		} `yaml: "http"`
+	}
 }
 
 func parseConfig() *config {
@@ -180,13 +199,13 @@ func parseConfig() *config {
 		log.Fatalf("error parsing _config.yml : %v", err)
 	}
 
-	data, err = ioutil.ReadFile(cfg.QR)
+	data, err = ioutil.ReadFile(cfg.Site.Config.QR)
 
 	if err != nil {
-		log.Fatalf("error reading qr file %s : %v", cfg.QR, err)
+		log.Fatalf("error reading qr file %s : %v", cfg.Site.Config.QR, err)
 	}
 
-	cfg.QR = base64.RawStdEncoding.EncodeToString(data)
+	cfg.Site.Config.QR = base64.StdEncoding.EncodeToString(data)
 
 	return &cfg
 }
@@ -209,15 +228,24 @@ func main() {
 
 	yamlConfig = parseConfig()
 
-	geoip.Init(yamlConfig.GeoIP)
+	geoip.Init(yamlConfig.Site.Config.GeoIP)
 
 	finish := make(chan bool)
 
-	if yamlConfig.HTTPS {
-		go httpsServer("cert", yamlConfig.Domain, ":https")
-	} else {
-		go httpServer(":8080")
+	handlers := make(letshttps.HandleMap)
+	handlers["/"] = getUserAgent
+
+	cfg := &letshttps.ServerConfig{
+		Redirect:  yamlConfig.Site.HTTPS.Only,
+		HTTPAddr:  letshttps.JoinAddr(yamlConfig.Site.HTTP.Port),
+		HTTPSAddr: letshttps.JoinAddr(yamlConfig.Site.HTTPS.Port),
+		Domains:   yamlConfig.Site.Config.Domain,
+		CertDir:   yamlConfig.Site.HTTPS.Cert,
+		Handlers:  handlers,
+		Timeout:   5,
 	}
+
+	go serve(yamlConfig.Site.HTTPS.Enabled, cfg)
 
 	<-finish
 }

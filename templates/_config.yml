@@ -1,9 +1,28 @@
-title : What's my User-Agent?
-description : Do you want to know what is your User-Agent? Yes, here it is.
-author: mysqto
-keywords: [User-Agent, UA, UserAgent, MyUserAgent, My, UA]
-domain: myua.is
-cert: cert
-templates: templates
-geoip: templates/GeoLite2-City.mmdb
-qr: templates/qr.svg
+site:
+    base : templates
+    config :
+        title : What's my User-Agent?
+        description : Do you want to know what is your User-Agent? Yes, here it is.
+        author: mysqto
+        qr: templates/qr.svg
+        geoip: templates/GeoLite2-City.mmdb
+        gaid: UA-119735834-1
+        keywords:
+            - UserAgent
+            - User-Agent
+            - UA
+            - MyUserAgent
+            - ua
+            - my
+            - IP
+            - IP Address
+        domain:
+            - jetbrains.host
+            - www.jetbrains.host
+    https:
+        enabled: true
+        only: true
+        port: 443
+        cert: cert
+    http:
+        port: 80

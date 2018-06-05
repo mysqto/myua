@@ -112,15 +112,15 @@
                 </div>
                 <h1>CLI examples</h1>
                 <div class="text-box">
-                    <code class="cli">$ curl -L {{ .Domain }}</code>
+                    <code class="cli">$ curl -L {{ .Host }}</code>
                     <code class="cli">{{ .IPAddr }}</code><br/>
-                    <code class="cli">$ http -b {{ .Domain }}</code>
+                    <code class="cli">$ http -bF {{ .Host }}</code>
                     <code class="cli">{{ .IPAddr }}</code><br/>
-                    <code class="cli">$ wget -qO- {{ .Domain }}</code>
+                    <code class="cli">$ wget -qO- {{ .Host }}</code>
                     <code class="cli">{{ .IPAddr }}</code><br/>
-                    <code class="cli">$ fetch -qo- https://{{ .Domain }}</code>
+                    <code class="cli">$ fetch -qo- https://{{ .Host }}</code>
                     <code class="cli">{{ .IPAddr }}</code><br/>
-                    <code class="cli">$ bat -print=b {{ .Domain }}</code>
+                    <code class="cli">$ bat -print=b {{ .Host }}</code>
                     <code class="cli">{{ .IPAddr }}</code>
                 </div>
             </div>
@@ -137,12 +137,12 @@
             </div>
         </footer>
         <!-- Global site tag (gtag.js) - Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-119735834-1"></script>
+        <script async src="https://www.googletagmanager.com/gtag/js?id={{ .GAid }}"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'UA-119735834-1');
+            gtag('config', '{{ .GAid }}');
         </script>
     </body>
 </html>

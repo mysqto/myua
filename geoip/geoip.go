@@ -52,8 +52,6 @@ func LookUp(addr, flags string) (string, error) {
 		}
 	}
 
-	log.Printf("countryCode = %s", countryCode)
-
 	path := flags + string(os.PathSeparator) + strings.ToLower(countryCode) + ".svg"
 
 	data, err = ioutil.ReadFile(path)
