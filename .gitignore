@@ -13,3 +13,9 @@
 
 # auto cert
 cert
+
+# IDE & editor related
+.idea
+.vscode
+.DS_Store
+*.mmdb
