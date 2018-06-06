@@ -17,8 +17,8 @@ site:
             - IP
             - IP Address
         domain:
-            - jetbrains.host
-            - www.jetbrains.host
+            - myua.is
+            - www.myua.is
     https:
         enabled: true
         only: true
