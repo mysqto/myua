@@ -16,7 +16,7 @@ import (
 
 	"github.com/mysqto/letshttps"
 	"github.com/mysqto/myua/geoip"
-	"github.com/mysqto/onsale/utils"
+	"github.com/mysqto/myua/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -169,9 +169,9 @@ type htmlTemplate struct {
 
 type config struct {
 	Site struct {
-		Base    string `yaml: "base"`
+		Base   string `yaml: "base"`
 		Config htmlTemplate
-		HTTPS struct {
+		HTTPS  struct {
 			Enabled bool   `yaml: "enabled"`
 			Only    bool   `yaml: "only"`
 			Port    string `yaml: "port"`
