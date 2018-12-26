@@ -16,7 +16,6 @@ import (
 
 	"github.com/mysqto/letshttps"
 	"github.com/mysqto/myua/geoip"
-	"github.com/mysqto/myua/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -72,6 +71,11 @@ func getXFFClient(r *http.Request) (string, error) {
 	return "", fmt.Errorf("empty \"X-Forwarded-For\" in request header")
 }
 
+func sendHTTPResponseWithStatus(w http.ResponseWriter, data string, status int) {
+	w.WriteHeader(status)
+	_, _ = w.Write([]byte(data))
+}
+
 func getUserAgent(w http.ResponseWriter, r *http.Request) {
 
 	uri := r.RequestURI
@@ -97,19 +101,19 @@ func getUserAgent(w http.ResponseWriter, r *http.Request) {
 		strings.HasPrefix(ua, "Wget") ||
 		strings.HasPrefix(ua, "HTTPie") ||
 		strings.HasPrefix(ua, "fetch") {
-		utils.SendHTTPResponse(w, ipAddr, http.StatusOK)
+		sendHTTPResponseWithStatus(w, ipAddr, http.StatusOK)
 		return
 	}
 
 	if uri != "/" {
-		path := yamlConfig.Site.Base + uri
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+		filePath := yamlConfig.Site.Base + uri
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		}
-		data, err := ioutil.ReadFile(path)
+		data, err := ioutil.ReadFile(filePath)
 
 		if err != nil {
-			log.Printf("error opening file %v : %v", path, err)
+			log.Printf("error opening file %v : %v", filePath, err)
 		} else {
 			w.WriteHeader(http.StatusOK)
 			w.Write(data)
@@ -136,7 +140,11 @@ func getUserAgent(w http.ResponseWriter, r *http.Request) {
 
 	tpl, err = template.New("index").Parse(string(data))
 
-	tpl.Execute(w, htmlTpl)
+	err = tpl.Execute(w, htmlTpl)
+
+	if err != nil {
+		log.Printf("error executing template : %v", err)
+	}
 }
 
 func serve(https bool, serverConfig *letshttps.ServerConfig) {
@@ -228,7 +236,11 @@ func main() {
 
 	yamlConfig = parseConfig()
 
-	geoip.Init(yamlConfig.Site.Config.GeoIP)
+	err := geoip.Init(yamlConfig.Site.Config.GeoIP)
+
+	if err != nil {
+		log.Fatalf("error initing geoip : %v", err)
+	}
 
 	finish := make(chan bool)
 
